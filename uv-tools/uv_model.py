@@ -1,7 +1,7 @@
 # UV Tools for GIMP 3: the UV layout model in plain Python (no GIMP, no
 # numpy), so that it can be tested by itself.
 #
-# - read a UV layout: SVG (Blender's File > Export UV Layout, the SVG
+# - read a UV layout: SVG (Blender's UV Editor, UV > Export UV Layout; the SVG
 #   files of GIMP Link for Blender, most other SVGs of polygons, paths
 #   and rectangles), Wavefront OBJ (texture coordinates of the faces;
 #   Blender, Blockbench, Maya, Substance and most 3D programs write it)

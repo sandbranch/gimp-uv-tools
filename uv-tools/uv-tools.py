@@ -52,6 +52,9 @@ P_DILATE = "plug-in-uv-tools-seam-bleed"
 P_FILL = "plug-in-uv-tools-fill-outside"
 P_PACK = "plug-in-uv-tools-pack-channels"
 P_UNPACK = "plug-in-uv-tools-unpack-channels"
+P_VERSION = "plug-in-uv-tools-version"
+VERSION = "0.1.0"
+API = 1     # raised when a procedure's arguments or results change
 
 # (mnemonics: h, r, c, o, l and s are the dialog's buttons)
 ISLANDS_FROM = [("channel", "_The UV Islands channel (from Import UV Layout)"),
@@ -99,6 +102,22 @@ def dialog(procedure, config, title, props, setup=None):
         d.destroy()
 
 
+DEFAULT_COLORS = {"outline-color": "#ff00ff", "color": "black"}
+
+
+def fix_colors(config):
+    """GIMP 3.2 hands a colour argument's default to the caller's config
+    (and to the dialog) as transparent black (GIMP's own Fog shows the
+    same). That is never a useful outline or fill colour, so it is taken
+    to mean the default."""
+    for prop, default in DEFAULT_COLORS.items():
+        if config.find_property(prop) is None:
+            continue
+        c = config.get_property(prop)
+        if c is None or tuple(c.get_rgba()) == (0.0, 0.0, 0.0, 0.0):
+            config.set_property(prop, Gegl.Color.new(default))
+
+
 def values(procedure, *vals):
     r = procedure.new_return_values(Gimp.PDBStatusType.SUCCESS, GLib.Error())
     for i, v in enumerate(vals, 1):
@@ -112,6 +131,7 @@ def guarded(fn):
     message, never as a crash without return values."""
     def run(self, procedure, run_mode, image, drawables, config, data):
         try:
+            fix_colors(config)
             return fn(self, procedure, run_mode, image, drawables, config, data)
         except Exception as e:
             traceback.print_exc()
@@ -122,13 +142,26 @@ def guarded(fn):
 
 class UVTools(Gimp.PlugIn):
     def do_query_procedures(self):
-        return [P_IMPORT, P_SELECT, P_DILATE, P_FILL, P_PACK, P_UNPACK]
+        return [P_IMPORT, P_SELECT, P_DILATE, P_FILL, P_PACK, P_UNPACK, P_VERSION]
 
     def do_set_i18n(self, name):
         return False
 
     def do_create_procedure(self, name):
+        # (babl must be set up before GeglColor defaults are made, or
+        # they come out transparent black)
+        Gegl.init(None)
         rw = GObject.ParamFlags.READWRITE
+        if name == P_VERSION:
+            p = Gimp.Procedure.new(self, name, Gimp.PDBProcType.PLUGIN, self.run_version, None)
+            p.set_documentation("UV Tools' version and interface level",
+                                "For other plug-ins (such as GIMP Link for Blender): the "
+                                "version, and the interface level, raised when a procedure's "
+                                "arguments or results change.", name)
+            p.set_attribution(AUTHOR, AUTHOR, YEAR)
+            p.add_string_return_value("version", "Version", "UV Tools' version", VERSION, rw)
+            p.add_int_return_value("api", "API", "Interface level", 0, 1000, API, rw)
+            return p
         p = Gimp.ImageProcedure.new(self, name, Gimp.PDBProcType.PLUGIN,
                                     getattr(self, "run_" + name.split("uv-tools-")[1]
                                             .replace("-", "_")), None)
@@ -140,7 +173,7 @@ class UVTools(Gimp.PlugIn):
             p.set_menu_label("_Import UV Layout...")
             p.set_documentation(
                 "Import a UV layout as island outlines, paths and a channel",
-                "Reads a UV layout (SVG from Blender's File > Export UV Layout or other "
+                "Reads a UV layout (SVG from Blender's UV > Export UV Layout or other "
                 "programs, an OBJ, or a Blockbench .bbmodel), scales it to the image (the "
                 "layout's 0..1 is the whole image) and adds: a path 'UV Islands' with the "
                 "outer boundaries of the islands (and their holes), without the internal "
@@ -405,6 +438,11 @@ class UVTools(Gimp.PlugIn):
         except ug.UVError as e:
             return error(procedure, run_mode, e)
         return values(procedure, GObject.Value(GObject.TYPE_INT, len(out)))
+
+
+    def run_version(self, procedure, config, data):
+        return values(procedure, GObject.Value(GObject.TYPE_STRING, VERSION),
+                      GObject.Value(GObject.TYPE_INT, API))
 
 
 if __name__ == "__main__":
