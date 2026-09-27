@@ -53,18 +53,18 @@ P_FILL = "plug-in-uv-tools-fill-outside"
 P_PACK = "plug-in-uv-tools-pack-channels"
 P_UNPACK = "plug-in-uv-tools-unpack-channels"
 
-ISLANDS_FROM = [("channel", "The UV Islands channel (from Import UV Layout)"),
-                ("selection", "The selection"),
-                ("alpha", "The layer's alpha (more than half opaque)")]
-SELECT_MODES = [("touching", "Islands the selection touches"),
-                ("centre", "The island at the centre of the selection"),
-                ("number", "Island number"),
-                ("all", "All islands")]
-OPERATIONS = [("replace", "Replace the selection"), ("add", "Add to the selection"),
-              ("subtract", "Subtract from the selection"),
-              ("intersect", "Intersect with the selection")]
-FILLS = [("color", "Colour"), ("transparent", "Transparent")]
-CHANNELS = [("red", "Red"), ("green", "Green"), ("blue", "Blue"), ("alpha", "Alpha")]
+# (mnemonics: h, r, c, o, l and s are the dialog's buttons)
+ISLANDS_FROM = [("channel", "_The UV Islands channel (from Import UV Layout)"),
+                ("selection", "The s_election"),
+                ("alpha", "The la_yer's alpha (more than half opaque)")]
+SELECT_MODES = [("touching", "Islands the selection _touches"),
+                ("centre", "The island at the selection's c_entre"),
+                ("number", "The island with this _number"),
+                ("all", "_All islands")]
+OPERATIONS = [("replace", "Re_place the selection"), ("add", "A_dd to it"),
+              ("subtract", "Su_btract from it"), ("intersect", "_Intersect with it")]
+FILLS = [("color", "Colo_ur"), ("transparent", "Trans_parent")]
+CHANNELS = [("red", "Re_d"), ("green", "Gree_n"), ("blue", "Bl_ue"), ("alpha", "Alpha")]
 
 
 def choice(table):
@@ -85,6 +85,11 @@ def dialog(procedure, config, title, props, setup=None):
     from gi.repository import GimpUi
     GimpUi.init(BINARY)
     d = GimpUi.ProcedureDialog.new(procedure, config, title)
+    for prop in props:
+        spec = config.find_property(prop)
+        if spec is not None and spec.value_type.name == "gchararray" and \
+                prop in ("islands-from", "fill", "source-channel", "mode", "operation"):
+            d.get_widget(prop, GimpUi.IntRadioFrame)
     if setup:
         setup(d)
     d.fill(props)
@@ -145,16 +150,16 @@ class UVTools(Gimp.PlugIn):
             p.add_file_argument("file", "UV layout _file",
                                 "SVG, OBJ or Blockbench .bbmodel with the UVs",
                                 Gimp.FileChooserAction.OPEN, False, None, rw)
-            p.add_boolean_argument("flip-v", "_Flip V (mirror top to bottom)",
+            p.add_boolean_argument("flip-v", "Flip _V (mirror top to bottom)",
                                    "Mirror the layout top to bottom, for UVs whose V points "
                                    "down (e.g. DirectX-style) in a file that assumes up",
                                    False, rw)
             p.add_string_argument("material", "_Material or texture",
                                   "OBJ: only faces after 'usemtl <this>'; Blockbench: only "
                                   "faces of this texture (name or index). Empty: all", "", rw)
-            p.add_int_argument("udim-tile", "_UDIM tile", "OBJ: the UDIM tile to take "
+            p.add_int_argument("udim-tile", "UDIM _tile", "OBJ: the UDIM tile to take "
                                "(1001 is 0..1)", 1001, 1100, 1001, rw)
-            p.add_boolean_argument("island-outline", "Island _outline path",
+            p.add_boolean_argument("island-outline", "Island outli_ne path",
                                    "A path 'UV Islands' with the islands' outer boundaries "
                                    "and holes (no internal edges), shown on the canvas",
                                    True, rw)
@@ -163,19 +168,19 @@ class UVTools(Gimp.PlugIn):
                                    "Path selects it)", True, rw)
             p.add_boolean_argument("all-edges", "All _edges path",
                                    "A path 'UV Edges' with every face edge", False, rw)
-            p.add_boolean_argument("islands-channel", "Islands _channel",
+            p.add_boolean_argument("islands-channel", "_Islands channel",
                                    "A channel 'UV Islands': all islands, pixel centres "
                                    "inside a face", True, rw)
-            p.add_boolean_argument("island-ids-layer", "Island _IDs layer",
+            p.add_boolean_argument("island-ids-layer", "Island I_Ds layer",
                                    "A hidden layer 'UV Island IDs', each island in its own "
                                    "colour, for the Fuzzy Select tool", False, rw)
-            p.add_boolean_argument("outline-layer", "Outline _layer",
+            p.add_boolean_argument("outline-layer", "Outline la_yer",
                                    "A layer 'UV Outline' with the island outline drawn in",
                                    False, rw)
             p.add_color_argument("outline-color", "Outline colo_ur",
                                  "Colour of the outline layer", True,
                                  Gegl.Color.new("#ff00ff"), rw)
-            p.add_boolean_argument("replace", "_Replace an earlier import",
+            p.add_boolean_argument("replace", "Repl_ace an earlier import",
                                    "Remove the paths, channel and layers of an earlier "
                                    "import first", True, rw)
             p.add_int_return_value("islands", "Islands", "Number of islands", 0, 1 << 30, 0, rw)
@@ -192,11 +197,11 @@ class UVTools(Gimp.PlugIn):
                 "an island by number, or all islands; replacing, adding to, subtracting "
                 "from or intersecting the selection. Needs Import UV Layout first.", name)
             p.set_sensitivity_mask(any_)
-            p.add_choice_argument("mode", "_Select", "Which islands", choice(SELECT_MODES),
+            p.add_choice_argument("mode", "_Which islands", "Which islands", choice(SELECT_MODES),
                                   "touching", rw)
-            p.add_int_argument("island", "Island _number", "Island number (1..N, as in the "
+            p.add_int_argument("island", "Island n_umber", "Island number (1..N, as in the "
                                "path names), for mode 'number'", 1, 1 << 30, 1, rw)
-            p.add_choice_argument("operation", "_Mode", "What to do with the selection",
+            p.add_choice_argument("operation", "Selection _mode", "What to do with the selection",
                                   choice(OPERATIONS), "replace", rw)
             p.add_int_return_value("count", "Count", "Islands selected", 0, 1 << 30, 0, rw)
         elif name == P_DILATE:
@@ -214,7 +219,7 @@ class UVTools(Gimp.PlugIn):
                                % ud.MAX_RADIUS, 1, ud.MAX_RADIUS, 8, rw)
             p.add_choice_argument("islands-from", "_Islands from", "Where the islands are",
                                   choice(ISLANDS_FROM), "channel", rw)
-            p.add_channel_argument("islands-channel", "Islands c_hannel",
+            p.add_channel_argument("islands-channel", "Islands ch_annel",
                                    "A channel with the islands (for 'channel'); none: the "
                                    "'UV Islands' channel of Import UV Layout", True, rw)
             p.add_drawable_return_value("drawable", "Drawable",
@@ -233,12 +238,12 @@ class UVTools(Gimp.PlugIn):
             p.set_sensitivity_mask(Gimp.ProcedureSensitivityMask.DRAWABLE)
             p.add_choice_argument("islands-from", "_Islands from", "Where the islands are",
                                   choice(ISLANDS_FROM), "channel", rw)
-            p.add_channel_argument("islands-channel", "Islands c_hannel",
+            p.add_channel_argument("islands-channel", "Islands ch_annel",
                                    "A channel with the islands (for 'channel'); none: the "
                                    "'UV Islands' channel of Import UV Layout", True, rw)
             p.add_choice_argument("fill", "_Fill with", "Colour or transparent",
                                   choice(FILLS), "color", rw)
-            p.add_color_argument("color", "_Colour", "The fill colour", True,
+            p.add_color_argument("color", "Colour _value", "The fill colour", True,
                                  Gegl.Color.new("black"), rw)
             p.add_boolean_argument("as-numbers", "Colour as stored _numbers (data maps)",
                                    "Store the colour's components as they are, without "
@@ -251,15 +256,15 @@ class UVTools(Gimp.PlugIn):
                 "each source layer (e.g. occlusion, roughness, metallic into R, G, B), at "
                 "the image's precision, without any colour conversion.", name)
             p.set_sensitivity_mask(any_)
-            p.add_layer_argument("red", "_Red from", "Layer for the red channel", True, rw)
+            p.add_layer_argument("red", "R_ed from", "Layer for the red channel", True, rw)
             p.add_layer_argument("green", "_Green from", "Layer for the green channel", True, rw)
             p.add_layer_argument("blue", "_Blue from", "Layer for the blue channel", True, rw)
             p.add_layer_argument("alpha", "_Alpha from", "Layer for the alpha channel (none: "
                                  "no alpha)", True, rw)
-            p.add_choice_argument("source-channel", "Take each layer's",
+            p.add_choice_argument("source-channel", "_Take each layer's channel",
                                   "Which channel of each source layer (grey layers have "
                                   "R = G = B)", choice(CHANNELS[:3]), "red", rw)
-            p.add_string_argument("name", "Layer _name", "Name of the new layer", "Packed", rw)
+            p.add_string_argument("name", "Layer na_me", "Name of the new layer", "Packed", rw)
             p.add_layer_return_value("layer", "Layer", "The packed layer", False, rw)
         elif name == P_UNPACK:
             p.set_menu_label("_Unpack Channels")

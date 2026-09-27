@@ -60,8 +60,11 @@ def init_gegl():
 
 
 def _parasite(name, data):
+    """Saved in the XCF, and undoable: GIMP adds a "can't undo" step for
+    a persistent parasite that is not undoable, and complains when that
+    step is undone."""
     b = data if isinstance(data, bytes) else str(data).encode("utf-8")
-    return Gimp.Parasite.new(name, Gimp.PARASITE_PERSISTENT, list(b))
+    return Gimp.Parasite.new(name, Gimp.PARASITE_PERSISTENT | Gimp.PARASITE_UNDOABLE, list(b))
 
 
 def mark(item, name, data=b"1"):
