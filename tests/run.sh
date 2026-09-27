@@ -39,9 +39,10 @@ mkdir -p "$out"
 
 echo "== lint"
 python3 - "$src" <<'EOF' || status=1
-import os, py_compile, sys
+import os, sys
 src = sys.argv[1]
 bad = []
+broken = []
 for root, dirs, files in os.walk(src):
     dirs[:] = [d for d in dirs if d not in (".git", "output", "__pycache__")]
     for f in files:
@@ -51,10 +52,13 @@ for root, dirs, files in os.walk(src):
                 if chr(0x2014) in line or chr(0x2013) in line:
                     bad.append("%s:%d" % (os.path.relpath(p, src), n))
         if f.endswith(".py"):
-            py_compile.compile(p, doraise=True, cfile=os.devnull)
-print("UVT PASS no em or en dashes, Python compiles" if not bad else
-      "UVT FAIL em or en dashes: " + " ".join(bad))
-sys.exit(1 if bad else 0)
+            try:
+                compile(open(p, encoding="utf-8").read(), p, "exec")
+            except SyntaxError as e:
+                broken.append("%s: %s" % (os.path.relpath(p, src), e))
+print("UVT PASS no em or en dashes" if not bad else "UVT FAIL em or en dashes: " + " ".join(bad))
+print("UVT PASS the Python compiles" if not broken else "UVT FAIL Python: " + "; ".join(broken))
+sys.exit(1 if bad or broken else 0)
 EOF
 
 echo "== unit"

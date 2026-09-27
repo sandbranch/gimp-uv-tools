@@ -17,7 +17,7 @@ import traceback
 import gi
 gi.require_version("Gimp", "3.0")
 gi.require_version("Gegl", "0.4")
-from gi.repository import Gimp, Gegl, Gio, GObject  # noqa: E402
+from gi.repository import Gimp, Gegl, Gio  # noqa: E402
 
 SRC = os.environ["UVT_SRC"]
 OUT = os.environ["UVT_OUT"]

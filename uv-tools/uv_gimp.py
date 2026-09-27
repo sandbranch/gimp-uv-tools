@@ -17,12 +17,11 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 import json
-import math
 
 import gi
 gi.require_version("Gimp", "3.0")
 gi.require_version("Gegl", "0.4")
-from gi.repository import Gimp, Gegl, Gio  # noqa: E402
+from gi.repository import Gimp, Gegl  # noqa: E402
 
 import uv_model as um  # noqa: E402
 import uv_dilate as ud  # noqa: E402
