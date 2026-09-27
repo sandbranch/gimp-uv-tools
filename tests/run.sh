@@ -16,7 +16,7 @@
 # real GIMP on a Broadway display (tests/gui/gui-test.sh).
 #
 # GIMP and Blender run with throwaway profiles and a throwaway home
-# under tests/output (tests/isolate.sh, a copy of gimp-plugin-devtools'),
+# under tests/output (tests/isolate.sh, a copy of gimp-devtools'),
 # with no GVFS, so that nothing lands in your folders. Before and after,
 # tests/snapshot.sh lists ~/.config/GIMP/3.2, ~/.var/app/org.gimp.GIMP,
 # ~/.var/app/org.blender.Blender and ~/.config/blender (names, sizes,

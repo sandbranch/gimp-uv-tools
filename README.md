@@ -211,7 +211,7 @@ failure. It needs the Flatpaks org.gimp.GIMP and org.blender.Blender,
 [GIMP Link for Blender](https://github.com/sandbranch/gimp-blender-link)
 next to this folder (for its reference islands and masks), and for the
 GUI test a headless Chrome, node 22 and
-[gimp-plugin-devtools](https://github.com/sandbranch/gimp-plugin-devtools)
+[gimp-devtools](https://github.com/sandbranch/gimp-devtools)
 next to this folder.
 
 - **lint**: no em or en dashes, the Python compiles;
@@ -249,7 +249,7 @@ next to this folder.
   `~/.var/app/org.blender.Blender` and `~/.config/blender` are listed,
   and the run fails if anything changed. GIMP and Blender run with a
   throwaway home and profile under `tests/output` (`tests/isolate.sh`,
-  from gimp-plugin-devtools): HOME and the XDG folders inside the
+  from gimp-devtools): HOME and the XDG folders inside the
   Flatpak point there and GIO uses no GVFS. Another program using those
   folders during the run makes this check fail too.
 

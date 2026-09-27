@@ -1,6 +1,6 @@
 # The dialogs of UV Tools and their undo, in a real GIMP (the Flatpak GUI
 # on a Broadway display, seen through a headless Chrome with
-# gimp-plugin-devtools/gui/cdp.mjs).
+# gimp-devtools/gui/cdp.mjs).
 #
 # For each tool: its dialog opens from the procedure (a screenshot is
 # kept in tests/output/gui/), OK runs it, and one Edit > Undo takes back
@@ -10,7 +10,7 @@
 #
 # Started by tests/gui/gui-test.sh. GIMP runs with --new-instance (else
 # it would hand its batch command to a GIMP that is already running),
-# isolated from your folders by gimp-plugin-devtools/gimp-run.sh (a
+# isolated from your folders by gimp-devtools/gimp-run.sh (a
 # throwaway home and profile). Stops the GIMP and Chrome it started, and
 # nothing else.
 #
@@ -31,7 +31,7 @@ src = os.path.dirname(tests)
 out = os.environ["UVT_GUI_OUT"]
 cases = os.environ["UVT_CASES"]
 profile = os.environ["UVT_GUI_PROFILE"]
-devtools = os.environ.get("GIMP_PLUGIN_DEVTOOLS", os.path.join(src, "..", "gimp-plugin-devtools"))
+devtools = os.environ.get("GIMP_PLUGIN_DEVTOOLS", os.path.join(src, "..", "gimp-devtools"))
 look = os.environ.get("UVT_GUI_LOOK") == "1"
 cdp_js = os.path.join(devtools, "gui", "cdp.mjs")
 failures = 0
