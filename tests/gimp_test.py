@@ -129,6 +129,11 @@ def t_procedures():
              "plug-in-uv-tools-fill-outside": "<Image>/Image/UV Tools",
              "plug-in-uv-tools-pack-channels": "<Image>/Image/UV Tools",
              "plug-in-uv-tools-unpack-channels": "<Image>/Image/UV Tools"}
+    proc = pdb.lookup_procedure("plug-in-uv-tools-version")
+    cfg = proc.create_config()
+    res = proc.run(cfg)
+    check("plug-in-uv-tools-version: %s, interface %s" % (res.index(1), res.index(2)),
+          res.index(0) == Gimp.PDBStatusType.SUCCESS and res.index(2) >= 1)
     for n, menu in names.items():
         p = pdb.lookup_procedure(n)
         check("procedure %s in %s" % (n, menu), p is not None and menu in p.get_menu_paths(),
@@ -248,6 +253,43 @@ def t_import_more():
         check("a bad file is refused", False)
     except RuntimeError as e:
         check("a bad file is refused (%s)" % str(e)[:80], "execution-error" in str(e))
+    im.delete()
+
+
+# ------------------------------------------------------------ GIMP Link
+def t_link():
+    """What GIMP Link for Blender would call (docs/blender-link.md)."""
+    folder = os.path.join(CASES, "monkey")
+    im, tex = new_image(1024, 1024, Gimp.Precision.U16_NON_LINEAR)
+    tex.set_name("Texture")
+    tex.fill(Gimp.FillType.WHITE)
+    islands, faces, outline, channel = run("plug-in-uv-tools-import", im, [tex],
+                                           file=gfile(os.path.join(folder, "gbl-islands.svg")),
+                                           island_outline=True, island_paths=True,
+                                           islands_channel=True, replace=True)
+    e = json.load(open(os.path.join(folder, "expected.json")))
+    paths = {}
+    for p in im.get_paths():
+        v = p.get_parasite("uv-tools-island")
+        if v is not None:
+            paths[int(bytes(v.get_data()).decode())] = p
+    gbl = um.find_islands(um.parse_svg(open(os.path.join(folder, "gbl-islands.svg")).read()))
+    same = all(segs_of_path(paths[n + 1]) == segs_of_loops(gbl.islands[n].loops, 1024, 1024)
+               for n in range(len(gbl.islands)))
+    check("GIMP Link: islands-<tile>.svg gives island paths 1..N, path N = GIMP Link's "
+          "island-(N-1)", islands == e["islands"] and sorted(paths) == list(range(1, islands + 1))
+          and same)
+    check("GIMP Link: the islands channel carries the parasite uv-tools-islands",
+          channel.get_parasite("uv-tools-islands") is not None)
+    # Send: a flattened copy, seam bleed on it with the copy's channel
+    dup = im.duplicate()
+    ch = [c for c in dup.get_channels() if c.get_parasite("uv-tools-islands") is not None]
+    lay = dup.get_layers()[0]
+    new, px = run("plug-in-uv-tools-seam-bleed", dup, [lay], radius=8, islands_from="channel",
+                  islands_channel=ch[0])
+    check("GIMP Link: seam bleed on the duplicate returns the layer to write",
+          len(ch) == 1 and new is not None and new.get_image() == dup and px > 0)
+    dup.delete()
     im.delete()
 
 
@@ -555,6 +597,15 @@ def t_bleed_speed():
                   "(%.0f%% of the image worked on)" % (label, n, time.time() - t0,
                                                      100.0 * px / (4096 * 4096)), flush=True)
         im.delete()
+    # 2K, as GIMP Link would send
+    im, lay = new_image(2048, 2048, Gimp.Precision.U16_NON_LINEAR)
+    run("plug-in-uv-tools-import", im, [lay], file=gfile(os.path.join(CASES, "big", "layout.svg")),
+        island_paths=False)
+    t0 = time.time()
+    lay, px = run("plug-in-uv-tools-seam-bleed", im, [lay], radius=8)
+    print("UVT TIME seam bleed 2048x2048 16-bit, big layout (833 islands), 8 px: %.2f s"
+          % (time.time() - t0), flush=True)
+    im.delete()
     # the monkey at 4K: fewer, bigger islands
     im, lay = new_image(4096, 4096, Gimp.Precision.U16_NON_LINEAR)
     run("plug-in-uv-tools-import", im, [lay],
@@ -658,7 +709,7 @@ def t_pack():
         im.delete()
 
 
-for sec, fn in [("procedures", t_procedures), ("import", t_import), ("import", t_import_more),
+for sec, fn in [("procedures", t_procedures), ("import", t_import), ("import", t_import_more), ("import", t_link),
                 ("select", t_select), ("bleed", t_bleed), ("bleed", t_bleed_more), ("fill", t_fill), ("pack", t_pack),
                 ("speed", t_bleed_speed)]:
     if section(sec):

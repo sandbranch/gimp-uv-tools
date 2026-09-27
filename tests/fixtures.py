@@ -119,6 +119,10 @@ SVGS = [
      '<svg xmlns="http://www.w3.org/2000/svg" width="3" height="3">' +
      "".join('<polygon points="%d,%d %d,%d %d,%d %d,%d"/>' % (x, y, x + 1, y, x + 1, y + 1, x, y + 1)
              for y in range(3) for x in range(3) if (x, y) != (1, 1)) + '</svg>', 1, 16),
+    ("a mirrored copy stacked on an island",
+     '<svg xmlns="http://www.w3.org/2000/svg" width="4" height="4">'
+     '<polygon points="0,0 2,0 2,2 0,2"/><polygon points="2,0 4,0 4,2 2,2"/>'
+     '<polygon points="4,0 2,0 2,2 4,2"/><polygon points="2,0 0,0 0,2 2,2"/></svg>', 2, 12),
     ("T-junction",
      '<svg xmlns="http://www.w3.org/2000/svg" width="4" height="4">'
      '<polygon points="0,0 2,0 2,2 0,2"/><polygon points="2,0 3,0 3,1 2,1"/>'

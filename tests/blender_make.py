@@ -1,6 +1,6 @@
 # Headless Blender: makes the test layouts. For each case a mesh with
 # known UVs, and from it
-#   layout.svg        Blender's File > Export UV Layout (SVG)
+#   layout.svg        Blender's UV > Export UV Layout (SVG)
 #   layout.obj        the mesh as OBJ (texture coordinates)
 #   gbl-uv.svg        GIMP Link for Blender's UV layout SVG
 #   gbl-islands.svg   GIMP Link for Blender's islands SVG (island-N)
