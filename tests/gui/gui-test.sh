@@ -40,7 +40,7 @@ cat >"$profile/sessionrc" <<'EOF'
     (size 1360 860))
 (single-window-mode yes)
 EOF
-version=$(LC_ALL=C flatpak info org.gimp.GIMP | sed -n 's/^ *Version: *//p')
+version=$(gimp-console-3.2 --version | sed 's/.* //')
 printf '(config-version "%s")\n(show-welcome-dialog no)\n' "$version" >"$profile/gimprc"
 
 UVT_GUI_OUT=$out UVT_CASES=$tests/output/cases UVT_GUI_PROFILE=$profile \

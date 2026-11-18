@@ -8,19 +8,19 @@
 #   UVT_SPEED=0 tests/run.sh   without the 4K timings
 #
 # Steps: lint (no em or en dashes, Python compiles); the layout model in
-# plain Python (tests/unit.py); headless Blender (org.blender.Blender)
+# plain Python (tests/unit.py); headless Blender (its Flatpak
+# org.blender.Blender if installed, else the blender command)
 # makes the test layouts and GIMP Link for Blender's reference islands,
 # boundary edges and masks (tests/blender_make.py); the model again on
-# those; headless GIMP (gimp-console, org.gimp.GIMP) runs the plug-in's
+# those; headless native GIMP (gimp-console) runs the plug-in's
 # procedures on them (tests/gimp_test.py); the dialogs and undo in a
 # real GIMP on a Broadway display (tests/gui/gui-test.sh).
 #
 # GIMP and Blender run with throwaway profiles and a throwaway home
 # under tests/output (tests/isolate.sh, a copy of gimp-devtools'),
 # with no GVFS, so that nothing lands in your folders. Before and after,
-# tests/snapshot.sh lists ~/.config/GIMP/3.2, ~/.var/app/org.gimp.GIMP,
-# ~/.var/app/org.blender.Blender and ~/.config/blender (names, sizes,
-# times) and the run fails if anything there changed. (Other programs
+# tests/snapshot.sh lists your folders of GIMP, GEGL and Blender (names,
+# sizes, times) and the run fails if anything there changed. (Other programs
 # using those folders while the tests run make this check fail too.)
 #
 # Prints PASS, FAIL or SKIP for each case; exits non-zero if any failed.
@@ -74,8 +74,9 @@ chmod 755 "$profile/plug-ins/uv-tools/uv-tools.py"
 echo "== Blender (test layouts)"
 cases=$out/cases
 gbl=${GBL_REPO:-$src/../gimp-blender-link}
-if ! command -v flatpak >/dev/null 2>&1 || ! flatpak info org.blender.Blender >/dev/null 2>&1; then
-    echo "UVT SKIP Blender: org.blender.Blender is not installed"
+if ! command -v blender >/dev/null 2>&1 &&
+   ! { command -v flatpak >/dev/null 2>&1 && flatpak info org.blender.Blender >/dev/null 2>&1; }; then
+    echo "UVT SKIP Blender: no blender command and no Flatpak org.blender.Blender"
     cases=
 elif [ ! -f "$gbl/blender/gimp_link/islands.py" ]; then
     echo "UVT SKIP Blender: no GIMP Link for Blender at $gbl (GBL_REPO)"
@@ -84,7 +85,8 @@ else
     gbl=$(cd "$gbl" && pwd)
     rm -rf "$cases" "$out/blender"
     b=$out/blender
-    gimp_run --timeout=900 --app=org.blender.Blender --flatpak --home="$b/home" \
+    # (in its Flatpak if that is installed, else natively)
+    gimp_run --timeout=900 --app=org.blender.Blender --home="$b/home" \
       --filesystem="$src" --filesystem="$gbl:ro" --env=GBL_REPO="$gbl" \
       --env=BLENDER_USER_RESOURCES="$b/res" --env=BLENDER_USER_CONFIG="$b/config" \
       --env=BLENDER_USER_SCRIPTS="$b/scripts" --env=BLENDER_USER_EXTENSIONS="$b/ext" -- \
@@ -113,7 +115,7 @@ if [ -z "$only" ] && [ "$UVT_SPEED" = 0 ]; then
     only=procedures,import,select,bleed,fill,pack
 fi
 log=$out/gimp.log
-gimp_run --timeout=1800 --home="$out/gimp-home" --filesystem="$src" \
+gimp_run --timeout=1800 --home="$out/gimp-home" \
   --env=GIMP3_DIRECTORY="$profile" --env=UVT_SRC="$src" --env=UVT_OUT="$out/work" \
   --env=UVT_CASES="$cases" --env=UVT_ONLY="$only" -- \
   gimp-console-3.2 --no-interface --no-fonts --batch-interpreter python-fu-eval \

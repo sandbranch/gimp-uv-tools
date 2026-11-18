@@ -16,7 +16,7 @@ rm -rf "$profile"
 mkdir -p "$profile/plug-ins/uv-tools"
 cp "$src/uv-tools/"*.py "$profile/plug-ins/uv-tools/"
 chmod 755 "$profile/plug-ins/uv-tools/uv-tools.py"
-gimp_run --timeout=600 --home="$out/docs-home" --filesystem="$src" \
+gimp_run --timeout=600 --home="$out/docs-home" \
   --env=GIMP3_DIRECTORY="$profile" --env=UVT_SRC="$src" --env=UVT_CASES="$out/cases" -- \
   gimp-console-3.2 --no-interface --no-fonts --batch-interpreter python-fu-eval \
   -b "exec(open('$here/doc-images.py').read())" --quit

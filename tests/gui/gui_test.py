@@ -1,4 +1,4 @@
-# The dialogs of UV Tools and their undo, in a real GIMP (the Flatpak GUI
+# The dialogs of UV Tools and their undo, in a real GIMP (the native GUI
 # on a Broadway display, seen through a headless Chrome with
 # gimp-devtools/gui/cdp.mjs).
 #
@@ -71,19 +71,19 @@ def shot(name):
 
 
 def our_gimp():
-    r = subprocess.run(["flatpak", "ps", "--columns=instance,child-pid,application"],
-                       capture_output=True, text=True)
+    """The process ids of the GIMP that runs our gui_script.py."""
+    script = os.path.join(here, "gui_script.py")
     found = []
-    for line in r.stdout.splitlines():
-        parts = line.split()
-        if len(parts) != 3 or parts[2] != "org.gimp.GIMP":
+    for pid in os.listdir("/proc"):
+        if not pid.isdigit():
             continue
         try:
-            cmd = open("/proc/%s/cmdline" % parts[1], "rb").read().replace(b"\0", b" ").decode()
+            argv = open("/proc/%s/cmdline" % pid, "rb").read().split(b"\0")
         except OSError:
             continue
-        if profile in cmd or ("--port %d " % broadway) in cmd:
-            found.append(parts[0])
+        if os.path.basename(argv[0].decode(errors="replace")) == "gimp-3.2" and \
+                any(script.encode() in a for a in argv):
+            found.append(pid)
     return found
 
 
@@ -184,8 +184,8 @@ try:
     log = open(os.path.join(out, "gimp.log"), "w")
     script = os.path.join(here, "gui_script.py")
     gimp = subprocess.Popen([
-        os.path.join(devtools, "gimp-run.sh"), "--flatpak", "--home=%s" % os.path.join(out, "home"),
-        "--filesystem=%s" % src, "--env=GDK_BACKEND=broadway", "--env=BROADWAY_DISPLAY=%s" % display,
+        os.path.join(devtools, "gimp-run.sh"), "--home=%s" % os.path.join(out, "home"),
+        "--env=GDK_BACKEND=broadway", "--env=BROADWAY_DISPLAY=%s" % display,
         "--env=GIMP3_DIRECTORY=%s" % profile, "--env=UVT_GUI_OUT=%s" % out,
         "--env=UVT_SRC=%s" % src, "--env=UVT_CASES=%s" % cases, "--", "sh", "-c",
         "broadwayd --port %d %s & bw=$!; trap 'kill $bw' EXIT; sleep 4; "
@@ -324,8 +324,10 @@ finally:
             chrome.wait(10)
         except subprocess.TimeoutExpired:
             chrome.kill()
-    for inst in our_gimp():
-        subprocess.run(["flatpak", "kill", inst])
+    for pid in our_gimp():
+        # its plug-ins first, then GIMP
+        subprocess.run(["pkill", "-P", pid])
+        subprocess.run(["kill", pid])
     if gimp is not None:
         try:
             gimp.wait(15)

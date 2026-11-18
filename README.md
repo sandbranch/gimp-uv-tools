@@ -16,9 +16,9 @@ layout of a model and gives you, in GIMP:
 
 It works with the UV layout SVG that Blender exports, with OBJ files
 (Blender, Blockbench, Maya, Substance and most other 3D programs write
-them) and with Blockbench projects (.bbmodel). Tested with GIMP 3.2.6
-(Flatpak), Blender 5.2 and Blockbench's file format as of its source of
-September 2026.
+them) and with Blockbench projects (.bbmodel). Tested with GIMP 3.2.8,
+Blender 5.2 and Blockbench's file format as of its source of September
+2026.
 
 | Every edge (Blender's UV export) | UV Tools' island outline |
 |---|---|
@@ -147,14 +147,14 @@ Copy the folder `uv-tools` (with its four `.py` files) into GIMP's
 plug-in folder, so that you have `plug-ins/uv-tools/uv-tools.py`, and
 restart GIMP:
 
-- Linux, native or **Flatpak**: `~/.config/GIMP/3.2/plug-ins/` (the GIMP
-  Flatpak uses this same folder). On Linux and macOS `uv-tools.py` must
-  be executable: `chmod +x ~/.config/GIMP/3.2/plug-ins/uv-tools/uv-tools.py`.
+- Linux: `~/.config/GIMP/3.2/plug-ins/`. On Linux and macOS
+  `uv-tools.py` must be executable: `chmod +x ~/.config/GIMP/3.2/plug-ins/uv-tools/uv-tools.py`.
 - Windows: `%APPDATA%\GIMP\3.2\plug-ins\`
 - macOS: `~/Library/Application Support/GIMP/3.2/plug-ins/`
 
-(Windows and macOS were not tried.) GIMP needs its Python support; the
-Flatpak has it. No other packages are needed (no numpy).
+(Windows and macOS were not tried.) GIMP needs its Python support (on
+Debian and Ubuntu `sudo apt install gimp` brings it). No other packages
+are needed (no numpy).
 
 ## With Blender
 
@@ -207,7 +207,8 @@ path, `uv-tools-island` (the number) on each island path,
     UVT_SPEED=0 tests/run.sh   without the 4K timings
 
 One command, no network; PASS or FAIL per check and a non-zero exit on
-failure. It needs the Flatpaks org.gimp.GIMP and org.blender.Blender,
+failure. It needs GIMP 3 (native, `gimp-console-3.2`), Blender (the `blender`
+command, or the Flatpak org.blender.Blender),
 [GIMP Link for Blender](https://github.com/sandbranch/gimp-blender-link)
 next to this folder (for its reference islands and masks), and for the
 GUI test a headless Chrome, node 22 and
@@ -245,12 +246,14 @@ next to this folder.
   seen through a headless Chrome: each dialog opens, OK runs it, and one
   Edit > Undo takes back all of it (screenshots in `tests/output/gui/`);
 - **your folders**: before and after, the names, sizes and times in
-  `~/.config/GIMP/3.2`, `~/.var/app/org.gimp.GIMP`,
-  `~/.var/app/org.blender.Blender` and `~/.config/blender` are listed,
-  and the run fails if anything changed. GIMP and Blender run with a
+  `~/.config/GIMP`, `~/.local/share/gegl-0.4`, `~/.cache/gimp`,
+  `~/.cache/babl`, `~/.var/app/org.blender.Blender`, `~/.config/blender`
+  and `~/.cache/blender` are listed, and the run fails if anything
+  changed. GIMP and Blender run with a
   throwaway home and profile under `tests/output` (`tests/isolate.sh`,
-  from gimp-devtools): HOME and the XDG folders inside the
-  Flatpak point there and GIO uses no GVFS. Another program using those
+  from gimp-devtools): HOME and the XDG folders (also inside
+  Blender's Flatpak, if Blender runs in one) point there and GIO uses no
+  GVFS. Another program using those
   folders during the run makes this check fail too.
 
 `tools/doc-images.sh` makes the pictures in `docs/images` (after a test
@@ -272,7 +275,7 @@ run).
 - GIMP's dialogs print "no mnemonic for property" warnings for the
   choices shown as radio buttons (GIMP's check does not look into radio
   frames); the options themselves have mnemonics.
-- Tested on Linux with the GIMP 3.2.6 Flatpak only.
+- Tested on Linux only (GIMP 3.2.8).
 
 ## License
 

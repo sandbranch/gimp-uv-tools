@@ -29,8 +29,10 @@ an island pixel when that mask is above one half.
 
 ## Why not numpy, and why GEGL
 
-GIMP's Flatpak (org.gimp.GIMP 3.2.6) has Python 3.13 without numpy
-(checked: `import numpy` fails in it), and a pure Python loop over the
+A plug-in cannot count on numpy in GIMP's Python: a native GIMP runs
+plug-ins with the system's Python, which has numpy only if it was
+installed, and GIMP 3.2.6's Flatpak had Python 3.13 without it (checked
+in 2026-09: `import numpy` failed in it). A pure Python loop over the
 16.7 million pixels of a 4K texture takes far too long. GEGL, which GIMP
 uses for all its pixel work, is there in every GIMP 3 and runs in
 threaded C. So the plug-in builds GEGL graphs from Python and lets GEGL
@@ -119,7 +121,8 @@ precision only (about 7 digits), since GEGL's samplers work in float32.
 
 ## Speed
 
-On an AMD Ryzen 9 5900X (12 cores, 24 threads), GIMP 3.2.6 Flatpak, a
+On an AMD Ryzen 9 5900X (12 cores, 24 threads), GIMP 3.2.6 (measured in
+2026-09 with its Flatpak), a
 4096 x 4096 layer (times from `tests/run.sh`, including reading and
 writing the layer):
 

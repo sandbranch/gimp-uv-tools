@@ -3,8 +3,8 @@
 # Every pixel outside the islands and within N pixels (Euclidean
 # distance of pixel centres) of an island pixel gets the exact stored
 # value of its nearest island pixel; island pixels and pixels farther
-# than N keep theirs. There is no numpy in GIMP's Flatpak Python, so the
-# work is done by GEGL operations (threaded C code) and Python only
+# than N keep theirs. A plug-in cannot count on numpy in GIMP's Python, so
+# the work is done by GEGL operations (threaded C code) and Python only
 # builds the graphs. The method is explained in docs/dilation.md.
 #
 # Copyright 2026 David
